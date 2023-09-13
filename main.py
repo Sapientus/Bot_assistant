@@ -36,7 +36,7 @@ def greeting(username):
     return f"How can I help you {username}?"
 
 
-# This checks if the phone nu,ber is correctly typed
+# This checks if the phone number is correctly typed
 @input_error
 def check_phone_number(phone_number):
     if phone_number.isnumeric() and len(phone_number) >= 10:
@@ -70,7 +70,7 @@ def search_phone(user_input):
     return user_input_dict.get(user_input)
 
 
-# This shows us all saves numbers
+# This shows us all saved numbers
 @input_error
 def show_all(username):
     table = "|{:*^41}|\n".format(f"All {username}'s phone numbers")
