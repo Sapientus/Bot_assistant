@@ -9,23 +9,15 @@ def input_error(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            result = func(*args, **kwargs)
+            return func(*args, **kwargs)
         except ValueError:
-            print(
-                "Phone number should be numeric and have at least 10 characters. Try again"
-            )
+            return "Phone number should be numeric and have at least 10 characters. Try again"
         except KeyError:
-            print(
-                "This number doesn`t exist. Please, add it as a new number or try again."
-            )
+            return "This number doesn`t exist. Please, add it as a new number or try again."
         except IndexError:
-            print("Please, try again")
+            return  "Please, try again"
         except TypeError:
-            print("Please, type the proper command from the list of commands.")
-        try:
-            return result
-        except UnboundLocalError:
-            pass
+            return "Please, type the proper command from the list of commands."
 
     return wrapper
 
@@ -41,8 +33,6 @@ def greeting(username):
 def check_phone_number(phone_number):
     if phone_number.isnumeric() and len(phone_number) >= 10:
         return phone_number
-    else:
-        raise ValueError
 
 
 # This one adds new contacts
@@ -50,8 +40,8 @@ def check_phone_number(phone_number):
 def adding(user_input):
     if check_phone_number(user_input.split(" ")[-1]):
         user_input_dict[user_input.split(" ")[0]] = user_input.split(" ")[-1]
-        print("Great, number was successfully added.")
-    return user_input_dict
+        return "Great, number was successfully added."
+    raise ValueError
 
 
 # Here we may change our contacts` phone number
@@ -59,14 +49,13 @@ def adding(user_input):
 def changing(user_input):
     if check_phone_number(user_input.split(" ")[-1]):
         user_input_dict[user_input.split(" ")[0]] = user_input.split(" ")[-1]
-        print("Number was successfully changed.")
-    return user_input_dict
+        return "Number was successfully changed."
+    raise ValueError
 
 
 # Here we`re looking for needed phone number
 @input_error
 def search_phone(user_input):
-    print(user_input_dict.get(user_input))
     return user_input_dict.get(user_input)
 
 
@@ -113,15 +102,15 @@ def command_parser(user_input):
 
 def main():
     global bot_working
-    username = str(input("Enter username: "))
+    username = input("Enter username: ")
     while bot_working:
-        user_input = str(input("Input the command: "))
+        user_input = input("Input the command: ")
         needed_command = command_parser(user_input)
         needed_argument = user_input.removeprefix(needed_command)
-        if needed_argument == "":
+        if not needed_argument:
             print(get_handler(needed_command)(username))
         else:
-            get_handler(needed_command)(needed_argument.lstrip())
+            print(get_handler(needed_command)(needed_argument.lstrip()))
 
 
 if __name__ == "__main__":
