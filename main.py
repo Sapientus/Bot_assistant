@@ -1,10 +1,7 @@
+from collections import UserDict
 from functools import wraps
 
-user_input_dict = {}
-bot_working = True
-
-
-# It`s a decorator that copes with errors and returns strings as a reply to commands
+#This is a decorator to cope with exceptions
 def input_error(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -14,104 +11,85 @@ def input_error(func):
             return "Phone number should be numeric and have at least 10 characters. Try again"
         except KeyError:
             return "This number doesn`t exist. Please, add it as a new number or try again."
-        except IndexError:
-            return  "Please, try again"
         except TypeError:
             return "Please, type the proper command from the list of commands."
 
     return wrapper
 
+#This class is a parent one for others, it defines logics.
+class Field:
+    def __init__(self, value):
+        self.value = value
 
-# Here we are being polite and greet our user :)
-@input_error
-def greeting(username):
-    return f"How can I help you {username}?"
+    def __str__(self):
+        return str(self.value)
 
+#This class saves contacts` names.
+class Name(Field):
+    def __init__(self, value):
+        super().__init__(value)
 
-# This checks if the phone number is correctly typed
-@input_error
-def check_phone_number(phone_number):
-    if phone_number.isnumeric() and len(phone_number) >= 10:
-        return phone_number
+#This ones saves phone number.
+class Phone(Field):
+    def __init__(self, value):
+        super().__init__(value)
+        self.check_phone_number()
 
-
-# This one adds new contacts
-@input_error
-def adding(user_input):
-    if check_phone_number(user_input.split(" ")[-1]):
-        user_input_dict[user_input.split(" ")[0]] = user_input.split(" ")[-1]
-        return "Great, number was successfully added."
-    raise ValueError
-
-
-# Here we may change our contacts` phone number
-@input_error
-def changing(user_input):
-    if check_phone_number(user_input.split(" ")[-1]):
-        user_input_dict[user_input.split(" ")[0]] = user_input.split(" ")[-1]
-        return "Number was successfully changed."
-    raise ValueError
+    def check_phone_number(self):
+        if self.value.isnumeric() and len(self.value) == 10:
+            return self.value
+        raise ValueError
 
 
-# Here we`re looking for needed phone number
-@input_error
-def search_phone(user_input):
-    return user_input_dict.get(user_input)
+#This class adds names with their phones to be able to add these records in an AddressBook
+class Record:
+    def __init__(self, name):
+        self.name = Name(name)
+        self.phones = []
 
+    def add_phone(self, phone):
+        self.phones.append(Phone(phone))
 
-# This shows us all saved numbers
-@input_error
-def show_all(username):
-    table = "|{:*^41}|\n".format(f"All {username}'s phone numbers")
-    for name, phone in user_input_dict.items():
-        table += "|{:<20}|{:>20}|\n".format(name, phone)
-    return table
+    @input_error
+    def remove_phone(self, phone):
+        for p in self.phones:
+            if p.value == phone:
+                self.phones.remove(p)
 
+    #@input_error
+    def edit_phone(self, old_phone, new_phone):
+        if old_phone not in [i.value for i in self.phones]:
+            raise ValueError('This phone number doesn\'t exist')
+            
+        self.remove_phone(old_phone)
+        self.add_phone(new_phone)
+        #for i in self.phones:
+            #if i.value != old_phone:
+                #raise ValueError('This phone number doesn\'t exist')
+        #self.remove_phone(old_phone)
+        #self.add_phone(new_phone)
 
-# Here we stop our working when user enters stop-word
-@input_error
-def closing(username):
-    global bot_working
-    bot_working = False
-    return f"Good bye {username}!"
+    def find_phone(self, phone):
+        for i in self.phones:
+            if i.value == phone:
+                return i
+        return None
 
+    def __str__(self):
+        return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
 
-# Here we create a dictionary for dividing commands and making code universal
-commands_dict = {
-    "hello": greeting,
-    "add": adding,
-    "change": changing,
-    "phone": search_phone,
-    "show all": show_all,
-    "good bye": closing,
-    "exit": closing,
-    "close": closing,
-}
+#This class serves as a Dict to save our records and use methods for them
+class AddressBook(UserDict):
 
+    def add_record(self, Record):
+        self.data[Record.name.value] = Record
 
-# This function gets a certain command from dictionary when needed
-def get_handler(command):
-    return commands_dict[command]
+    def delete(self, name):
+        if name in self.data.keys():
+            del self.data[name]
+        return 'This contact doesn\'t exist.'
 
-
-def command_parser(user_input):
-    for key in commands_dict:
-        if key in user_input:
-            return key
-
-
-def main():
-    global bot_working
-    username = input("Enter username: ")
-    while bot_working:
-        user_input = input("Input the command: ")
-        needed_command = command_parser(user_input)
-        needed_argument = user_input.removeprefix(needed_command)
-        if not needed_argument:
-            print(get_handler(needed_command)(username))
-        else:
-            print(get_handler(needed_command)(needed_argument.lstrip()))
-
-
-if __name__ == "__main__":
-    main()
+    def find(self, name):
+        if name in self.data.keys():
+            return self.data[name]
+        return None
