@@ -31,7 +31,7 @@ class Field:
     def __str__(self):
         return str(self._value)
     
-class Birthday:
+class Birthday(Field):
 
     def __init__(self, value: int):
         self._value = None
@@ -46,12 +46,8 @@ class Birthday:
     def check_birthday(self, value):     #This returns a string if birthdays is wrong, and None if it is correct
         if datetime.strptime(value, "%Y-%m-%d"):
             return None
-        
-    @property       
-    def value(self):
-        return self._value
 
-    @value.setter            #A setter for our birthday
+    @Field.value.setter            #A setter for our birthday
     def value(self, new_value):
         if not self.check_birthday(new_value):
             self._value = new_value
